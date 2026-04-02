@@ -1,580 +1,747 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kick Multi-Chat Viewer</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multichat</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-      background: #0e0e10;
-      color: #efeff1;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+      body {
+        background: #0e0e10;
+        color: #efeff1;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
 
-    .header {
-      background: #18181b;
-      padding: 16px 24px;
-      border-bottom: 2px solid #53fc18;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
+      .header {
+        background: #18181b;
+        border-bottom: 2px solid #53fc18;
+        display: flex;
+        flex-direction: column;
+      }
 
-    .header h1 {
-      color: #53fc18;
-      font-size: 1.4rem;
-      white-space: nowrap;
-    }
+      .header-top {
+        display: flex;
+        align-items: center;
+        padding: 10px 24px;
+        gap: 12px;
+      }
 
-    .controls {
-      display: flex;
-      gap: 10px;
-      flex: 1;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+      .header h1 {
+        color: #53fc18;
+        font-size: 1.4rem;
+        white-space: nowrap;
+      }
 
-    .controls input {
-      background: #2a2a2e;
-      border: 1px solid #3a3a3e;
-      color: #efeff1;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      flex: 1;
-      min-width: 200px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
+      .header-toggle {
+        margin-left: auto;
+        background: #2a2a2e;
+        border: 1px solid #3a3a3e;
+        color: #efeff1;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.2s,
+          border-color 0.2s;
+        flex-shrink: 0;
+      }
 
-    .controls input:focus {
-      border-color: #53fc18;
-    }
+      .header-toggle:hover {
+        background: #3a3a3e;
+        border-color: #53fc18;
+      }
 
-    .controls input::placeholder {
-      color: #888;
-    }
+      .header-toggle svg {
+        width: 18px;
+        height: 18px;
+        fill: #efeff1;
+        transition: transform 0.3s ease;
+      }
 
-    .controls button {
-      padding: 8px 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      white-space: nowrap;
-    }
+      .header-toggle .hamburger-line {
+        transition:
+          transform 0.3s ease,
+          opacity 0.2s ease;
+        transform-origin: center;
+      }
 
-    .controls button:active {
-      transform: scale(0.97);
-    }
+      .header-toggle.open .hamburger-line:nth-child(1) {
+        transform: translateY(6px) rotate(45deg);
+      }
 
-    #connectBtn {
-      background: #53fc18;
-      color: #0e0e10;
-    }
+      .header-toggle.open .hamburger-line:nth-child(2) {
+        opacity: 0;
+      }
 
-    #connectBtn:hover {
-      background: #45d414;
-    }
+      .header-toggle.open .hamburger-line:nth-child(3) {
+        transform: translateY(-6px) rotate(-45deg);
+      }
 
-    #connectBtn:disabled {
-      background: #3a3a3e;
-      color: #888;
-      cursor: not-allowed;
-    }
+      .controls-wrapper {
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.3s ease,
+          padding 0.3s ease;
+      }
 
-    #disconnectBtn {
-      background: #e91916;
-      color: #fff;
-    }
+      .controls-wrapper.open {
+        max-height: 80px;
+        padding: 0 24px 12px;
+      }
 
-    #disconnectBtn:hover {
-      background: #c41412;
-    }
+      .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
 
-    #disconnectBtn:disabled {
-      background: #3a3a3e;
-      color: #888;
-      cursor: not-allowed;
-    }
+      .controls input {
+        background: #2a2a2e;
+        border: 1px solid #3a3a3e;
+        color: #efeff1;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        flex: 1;
+        min-width: 200px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
 
-    #clearBtn {
-      background: #2a2a2e;
-      color: #efeff1;
-      border: 1px solid #3a3a3e;
-    }
+      .controls input:focus {
+        border-color: #53fc18;
+      }
 
-    #clearBtn:hover {
-      background: #3a3a3e;
-    }
+      .controls input::placeholder {
+        color: #888;
+      }
 
-    .status-bar {
-      background: #1f1f23;
-      padding: 8px 24px;
-      font-size: 0.85rem;
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+      .controls button {
+        padding: 8px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.1s;
+        white-space: nowrap;
+      }
 
-    .status-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
+      .controls button:active {
+        transform: scale(0.97);
+      }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #e91916;
-    }
+      #connectBtn {
+        background: #53fc18;
+        color: #0e0e10;
+      }
 
-    .status-dot.connected {
-      background: #53fc18;
-      box-shadow: 0 0 6px #53fc18;
-    }
+      #connectBtn:hover {
+        background: #45d414;
+      }
 
-    .channel-tags {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
+      #connectBtn:disabled {
+        background: #3a3a3e;
+        color: #888;
+        cursor: not-allowed;
+      }
 
-    .channel-tag {
-      background: #2a2a2e;
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      color: #53fc18;
-      border: 1px solid #3a3a3e;
-    }
+      #disconnectBtn {
+        background: #e91916;
+        color: #fff;
+      }
 
-    .chat-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+      #disconnectBtn:hover {
+        background: #c41412;
+      }
 
-    .chat-container::-webkit-scrollbar {
-      width: 6px;
-    }
+      #disconnectBtn:disabled {
+        background: #3a3a3e;
+        color: #888;
+        cursor: not-allowed;
+      }
 
-    .chat-container::-webkit-scrollbar-track {
-      background: #18181b;
-    }
+      #clearBtn {
+        background: #2a2a2e;
+        color: #efeff1;
+        border: 1px solid #3a3a3e;
+      }
 
-    .chat-container::-webkit-scrollbar-thumb {
-      background: #3a3a3e;
-      border-radius: 3px;
-    }
+      #clearBtn:hover {
+        background: #3a3a3e;
+      }
 
-    .chat-msg {
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      line-height: 1.4;
-      word-wrap: break-word;
-      transition: background 0.15s;
-      animation: fadeIn 0.2s ease;
-    }
+      .chat-wrapper {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+      }
 
-    .chat-msg:hover {
-      background: #1f1f23;
-    }
+      .chat-container {
+        height: 100%;
+        overflow-y: auto;
+        padding: 12px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+      .chat-container::-webkit-scrollbar {
+        width: 6px;
+      }
 
-    .chat-channel {
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 1px 6px;
-      border-radius: 4px;
-      margin-right: 6px;
-      display: inline-block;
-    }
+      .chat-container::-webkit-scrollbar-track {
+        background: #18181b;
+      }
 
-    .chat-username {
-      font-weight: 700;
-      margin-right: 4px;
-    }
+      .chat-container::-webkit-scrollbar-thumb {
+        background: #3a3a3e;
+        border-radius: 3px;
+      }
 
-    .chat-username::after {
-      content: ':';
-    }
+      .chat-msg {
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        word-wrap: break-word;
+        transition: background 0.15s;
+        animation: fadeIn 0.2s ease;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
 
-    .chat-content {
-      color: #d1d1d6;
-    }
+      .chat-msg:hover {
+        background: #1f1f23;
+      }
 
-    .chat-content img {
-      height: 28px;
-      vertical-align: middle;
-      margin: 0 2px;
-    }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-    .system-msg {
-      color: #888;
-      font-style: italic;
-      font-size: 0.85rem;
-      padding: 4px 10px;
-    }
+      .chat-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        object-fit: cover;
+        margin-top: 1px;
+      }
 
-    .msg-count {
-      color: #888;
-      font-size: 0.85rem;
-    }
+      .chat-msg-body {
+        min-width: 0;
+      }
 
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      color: #555;
-      gap: 12px;
-    }
+      .chat-channel {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 1px 6px;
+        border-radius: 4px;
+        margin-right: 6px;
+        display: inline-block;
+      }
 
-    .empty-state svg {
-      width: 64px;
-      height: 64px;
-      opacity: 0.3;
-    }
-  </style>
-</head>
-<body>
+      .chat-username {
+        font-weight: 700;
+        margin-right: 4px;
+      }
 
-  <div class="header">
-    <h1>⚡ Kick Multi-Chat</h1>
-    <div class="controls">
-      <input type="text" id="channelInput" placeholder="Enter channels separated by commas (e.g. xqc, trainwreckstv, ac7ionman)" />
-      <button id="connectBtn" onclick="connect()">Connect</button>
-      <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
-      <button id="clearBtn" onclick="clearChat()">Clear</button>
+      .chat-username::after {
+        content: ":";
+      }
+
+      .chat-content {
+        color: #d1d1d6;
+      }
+
+      .chat-content img {
+        height: 28px;
+        vertical-align: middle;
+        margin: 0 2px;
+      }
+
+      .system-msg {
+        color: #888;
+        font-style: italic;
+        font-size: 0.85rem;
+        padding: 4px 10px;
+        margin-left: 30px;
+      }
+
+      .msg-count {
+        color: #888;
+        font-size: 0.85rem;
+      }
+
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        color: #555;
+        gap: 12px;
+      }
+
+      .empty-state svg {
+        width: 64px;
+        height: 64px;
+        opacity: 0.3;
+      }
+
+      .resume-scroll-btn {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(80px);
+        background: #53fc18;
+        color: #0e0e10;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 16px rgba(83, 252, 24, 0.3);
+        transition:
+          transform 0.3s ease,
+          opacity 0.3s ease;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      .resume-scroll-btn.visible {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .resume-scroll-btn:hover {
+        background: #45d414;
+      }
+
+      .resume-scroll-btn svg {
+        width: 14px;
+        height: 14px;
+        fill: #0e0e10;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-top">
+        <h1>Kick Multichat</h1>
+        <button
+          class="header-toggle"
+          id="headerToggle"
+          onclick="toggleControls()"
+          title="Toggle controls"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <rect
+              class="hamburger-line"
+              x="3"
+              y="5"
+              width="18"
+              height="2"
+              rx="1"
+              fill="#efeff1"
+            />
+            <rect
+              class="hamburger-line"
+              x="3"
+              y="11"
+              width="18"
+              height="2"
+              rx="1"
+              fill="#efeff1"
+            />
+            <rect
+              class="hamburger-line"
+              x="3"
+              y="17"
+              width="18"
+              height="2"
+              rx="1"
+              fill="#efeff1"
+            />
+          </svg>
+        </button>
+      </div>
+      <div class="controls-wrapper" id="controlsWrapper">
+        <div class="controls">
+          <input
+            type="text"
+            id="channelInput"
+            placeholder="Enter channels separated by commas (e.g. xqc, trainwreckstv, ac7ionman)"
+          />
+          <button id="connectBtn" onclick="connect()">Connect</button>
+          <button id="disconnectBtn" onclick="disconnect()" disabled>
+            Disconnect
+          </button>
+          <button id="clearBtn" onclick="clearChat()">Clear</button>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="status-bar">
-    <span class="status-indicator">
-      <span class="status-dot" id="statusDot"></span>
-      <span id="statusText">Disconnected</span>
-    </span>
-    <div class="channel-tags" id="channelTags"></div>
-    <span class="msg-count" id="msgCount"></span>
-  </div>
-
-  <div class="chat-container" id="chatContainer">
-    <div class="empty-state" id="emptyState">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
-      <p>Enter channel names above and click Connect</p>
+    <div class="chat-wrapper">
+      <div class="chat-container" id="chatContainer">
+        <div class="empty-state" id="emptyState">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"
+            />
+          </svg>
+          <p>Enter channel names above and click Connect</p>
+        </div>
+      </div>
+      <button
+        class="resume-scroll-btn"
+        id="resumeScrollBtn"
+        onclick="resumeAutoScroll()"
+      >
+        <svg viewBox="0 0 24 24">
+          <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
+        </svg>
+        Resume Auto-Scroll
+      </button>
     </div>
-  </div>
 
-  <script>
-    // ============================================================
-    //  KickChat — browser version (single-file, no build tools)
-    // ============================================================
+    <script>
+      const PUSHER_WS_URL =
+        "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false";
 
-    const PUSHER_WS_URL =
-      'wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false';
+      const channelAvatars = {};
 
-    class KickChat {
-      constructor() {
-        this.ws = null;
-        this.onMessage = null;
-        this.channelMap = {}; // chatroomId -> channelName
-      }
-
-      static async listen(channels, callback) {
-        const chat = new KickChat();
-        return chat.start(channels, callback);
-      }
-
-      async start(channels, callback) {
-        this.onMessage = callback;
-
-        const channelList = Array.isArray(channels) ? channels : [channels];
-
-        // Resolve all chatroom IDs in parallel
-        const resolved = await Promise.all(
-          channelList.map(async (ch) => {
-            const name = String(ch).trim().toLowerCase();
-            if (!isNaN(ch)) return { name, id: Number(ch) };
-            const id = await this._getChatroomId(name);
-            if (!id) throw new Error(`Channel not found: ${name}`);
-            return { name, id };
-          })
-        );
-
-        // Build channel map so we can tag messages with channel name
-        this.channelMap = {};
-        resolved.forEach((r) => (this.channelMap[`chatrooms.${r.id}.v2`] = r.name));
-
-        await this._connect();
-
-        // Subscribe to every chatroom on one socket
-        for (const r of resolved) {
-          this.ws.send(
-            JSON.stringify({
-              event: 'pusher:subscribe',
-              data: { auth: '', channel: `chatrooms.${r.id}.v2` },
-            })
-          );
-        }
-
-        return this;
-      }
-
-      async _getChatroomId(channelName) {
-        try {
-          const resp = await fetch(`https://kick.com/api/v2/channels/${channelName}`);
-          if (!resp.ok) return null;
-          const json = await resp.json();
-          return json?.chatroom?.id ?? null;
-        } catch {
-          return null;
-        }
-      }
-
-      _connect() {
-        return new Promise((resolve, reject) => {
-          this.ws = new WebSocket(PUSHER_WS_URL);
-          this.ws.addEventListener('open', () => resolve());
-          this.ws.addEventListener('error', (e) => reject(e));
-          this.ws.addEventListener('message', (e) => {
-            try {
-              this._handleMessage(JSON.parse(e.data));
-            } catch {}
-          });
-          this.ws.addEventListener('close', () => {
-            if (this.onClose) this.onClose();
-          });
-        });
-      }
-
-      _handleMessage(msg) {
-        if (!this.onMessage) return;
-
-        let data = null;
-        try {
-          data = msg.data ? JSON.parse(msg.data) : null;
-        } catch {
-          data = msg.data ?? null;
-        }
-
-        const channel = msg.channel ? this.channelMap[msg.channel] || msg.channel : null;
-        this.onMessage(msg.event, data, channel);
-      }
-
-      disconnect() {
-        if (this.ws) {
-          this.ws.close();
+      class KickChat {
+        constructor() {
           this.ws = null;
+          this.onMessage = null;
+          this.channelMap = {};
+        }
+
+        static async listen(channels, callback) {
+          const chat = new KickChat();
+          return chat.start(channels, callback);
+        }
+
+        async start(channels, callback) {
+          this.onMessage = callback;
+
+          const channelList = Array.isArray(channels) ? channels : [channels];
+
+          const resolved = await Promise.all(
+            channelList.map(async (ch) => {
+              const name = String(ch).trim().toLowerCase();
+              if (!isNaN(ch)) return { name, id: Number(ch), avatar: null };
+              const info = await this._getChannelInfo(name);
+              if (!info) throw new Error(`Channel not found: ${name}`);
+              return { name, id: info.chatroomId, avatar: info.avatar };
+            }),
+          );
+
+          this.channelMap = {};
+          resolved.forEach((r) => {
+            this.channelMap[`chatrooms.${r.id}.v2`] = r.name;
+            if (r.avatar) channelAvatars[r.name] = r.avatar;
+          });
+
+          await this._connect();
+
+          for (const r of resolved) {
+            this.ws.send(
+              JSON.stringify({
+                event: "pusher:subscribe",
+                data: { auth: "", channel: `chatrooms.${r.id}.v2` },
+              }),
+            );
+          }
+
+          return this;
+        }
+
+        async _getChannelInfo(channelName) {
+          try {
+            const resp = await fetch(
+              `https://kick.com/api/v2/channels/${channelName}`,
+            );
+            if (!resp.ok) return null;
+            const json = await resp.json();
+            const chatroomId = json?.chatroom?.id ?? null;
+            const avatar = json?.user?.profile_pic ?? null;
+            if (!chatroomId) return null;
+            return { chatroomId, avatar };
+          } catch {
+            return null;
+          }
+        }
+
+        _connect() {
+          return new Promise((resolve, reject) => {
+            this.ws = new WebSocket(PUSHER_WS_URL);
+            this.ws.addEventListener("open", () => resolve());
+            this.ws.addEventListener("error", (e) => reject(e));
+            this.ws.addEventListener("message", (e) => {
+              try {
+                this._handleMessage(JSON.parse(e.data));
+              } catch {}
+            });
+            this.ws.addEventListener("close", () => {
+              if (this.onClose) this.onClose();
+            });
+          });
+        }
+
+        _handleMessage(msg) {
+          if (!this.onMessage) return;
+
+          let data = null;
+          try {
+            data = msg.data ? JSON.parse(msg.data) : null;
+          } catch {
+            data = msg.data ?? null;
+          }
+
+          const channel = msg.channel
+            ? this.channelMap[msg.channel] || msg.channel
+            : null;
+          this.onMessage(msg.event, data, channel);
+        }
+
+        disconnect() {
+          if (this.ws) {
+            this.ws.close();
+            this.ws = null;
+          }
         }
       }
-    }
 
-    // ============================================================
-    //  UI Logic
-    // ============================================================
+      let chat = null;
+      let messageCount = 0;
+      let autoScroll = true;
 
-    let chat = null;
-    let messageCount = 0;
-    let autoScroll = true;
+      const channelColors = {};
+      const colorPalette = [
+        "#53fc18",
+        "#e91916",
+        "#1e90ff",
+        "#ff6ecb",
+        "#ffae42",
+        "#00ced1",
+        "#ff5555",
+        "#b39ddb",
+        "#f48fb1",
+        "#81c784",
+        "#4fc3f7",
+        "#fff176",
+        "#ff8a65",
+        "#a1887f",
+        "#90a4ae",
+      ];
+      let colorIndex = 0;
 
-    // Assign a consistent colour to each channel
-    const channelColors = {};
-    const colorPalette = [
-      '#53fc18', '#e91916', '#1e90ff', '#ff6ecb', '#ffae42',
-      '#00ced1', '#ff5555', '#b39ddb', '#f48fb1', '#81c784',
-      '#4fc3f7', '#fff176', '#ff8a65', '#a1887f', '#90a4ae',
-    ];
-    let colorIndex = 0;
-
-    function getChannelColor(name) {
-      if (!channelColors[name]) {
-        channelColors[name] = colorPalette[colorIndex % colorPalette.length];
-        colorIndex++;
-      }
-      return channelColors[name];
-    }
-
-    // Generate a colour from a username string for consistent user colouring
-    function getUserColor(username) {
-      let hash = 0;
-      for (let i = 0; i < username.length; i++) {
-        hash = username.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const hue = Math.abs(hash) % 360;
-      return `hsl(${hue}, 70%, 60%)`;
-    }
-
-    function renderEmotes(content, emoteData) {
-      if (!content) return '';
-      // Basic HTML escape
-      let safe = content
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-
-      // Replace [emote:ID:name] patterns with images if present
-      safe = safe.replace(/\[emote:(\d+):([^\]]+)\]/g, (match, id, name) => {
-        return `<img src="https://files.kick.com/emotes/${id}/fullsize" alt="${name}" title="${name}">`;
-      });
-
-      return safe;
-    }
-
-    function addChatMessage(channel, username, content) {
-      const container = document.getElementById('chatContainer');
-      const emptyState = document.getElementById('emptyState');
-      if (emptyState) emptyState.remove();
-
-      const div = document.createElement('div');
-      div.className = 'chat-msg';
-
-      const channelColor = channel ? getChannelColor(channel) : '#888';
-      const userColor = getUserColor(username);
-
-      let html = '';
-      if (channel) {
-        html += `<span class="chat-channel" style="background:${channelColor}22;color:${channelColor};border:1px solid ${channelColor}44">${channel}</span>`;
-      }
-      html += `<span class="chat-username" style="color:${userColor}">${username}</span>`;
-      html += `<span class="chat-content">${renderEmotes(content)}</span>`;
-
-      div.innerHTML = html;
-      container.appendChild(div);
-
-      messageCount++;
-      document.getElementById('msgCount').textContent = `${messageCount} messages`;
-
-      // Keep max 500 messages in DOM
-      while (container.children.length > 500) {
-        container.removeChild(container.firstChild);
+      function getChannelColor(name) {
+        if (!channelColors[name]) {
+          channelColors[name] = colorPalette[colorIndex % colorPalette.length];
+          colorIndex++;
+        }
+        return channelColors[name];
       }
 
-      // Auto-scroll
-      if (autoScroll) {
-        container.scrollTop = container.scrollHeight;
+      function getUserColor(username) {
+        let hash = 0;
+        for (let i = 0; i < username.length; i++) {
+          hash = username.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash) % 360;
+        return `hsl(${hue}, 70%, 60%)`;
       }
-    }
 
-    function addSystemMessage(text) {
-      const container = document.getElementById('chatContainer');
-      const div = document.createElement('div');
-      div.className = 'system-msg';
-      div.textContent = text;
-      container.appendChild(div);
-      container.scrollTop = container.scrollHeight;
-    }
+      function renderEmotes(content) {
+        if (!content) return "";
+        let safe = content
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
 
-    // Detect when user scrolls up to pause auto-scroll
-    document.getElementById('chatContainer').addEventListener('scroll', function () {
-      const el = this;
-      autoScroll = el.scrollTop + el.clientHeight >= el.scrollHeight - 60;
-    });
-
-    async function connect() {
-      const input = document.getElementById('channelInput').value.trim();
-      if (!input) return;
-
-      const channels = input
-        .split(',')
-        .map((c) => c.trim().toLowerCase())
-        .filter(Boolean);
-
-      if (channels.length === 0) return;
-
-      // UI updates
-      document.getElementById('connectBtn').disabled = true;
-      document.getElementById('disconnectBtn').disabled = false;
-      document.getElementById('statusText').textContent = 'Connecting...';
-
-      // Channel tags
-      const tagsEl = document.getElementById('channelTags');
-      tagsEl.innerHTML = '';
-      channels.forEach((ch) => {
-        const tag = document.createElement('span');
-        tag.className = 'channel-tag';
-        tag.textContent = ch;
-        tag.style.color = getChannelColor(ch);
-        tag.style.borderColor = getChannelColor(ch) + '44';
-        tagsEl.appendChild(tag);
-      });
-
-      try {
-        chat = await KickChat.listen(channels, (event, data, channel) => {
-          if (event === 'App\\Events\\ChatMessageEvent') {
-            const username = data?.sender?.username || 'unknown';
-            const content = data?.content || '';
-            addChatMessage(channel, username, content);
-          }
-          // You can handle other event types here if needed
+        safe = safe.replace(/\[emote:(\d+):([^\]]+)\]/g, (match, id, name) => {
+          return `<img src="https://files.kick.com/emotes/${id}/fullsize" alt="${name}" title="${name}">`;
         });
 
-        chat.onClose = () => {
-          document.getElementById('statusDot').classList.remove('connected');
-          document.getElementById('statusText').textContent = 'Disconnected';
-          document.getElementById('connectBtn').disabled = false;
-          document.getElementById('disconnectBtn').disabled = true;
-          addSystemMessage('Connection closed.');
-        };
-
-        document.getElementById('statusDot').classList.add('connected');
-        document.getElementById('statusText').textContent = 'Connected';
-        addSystemMessage(`Connected to: ${channels.join(', ')}`);
-      } catch (err) {
-        document.getElementById('statusText').textContent = 'Error';
-        document.getElementById('connectBtn').disabled = false;
-        document.getElementById('disconnectBtn').disabled = true;
-        addSystemMessage(`Error: ${err.message}`);
+        return safe;
       }
-    }
 
-    function disconnect() {
-      if (chat) {
-        chat.disconnect();
-        chat = null;
+      function addChatMessage(channel, username, content) {
+        const container = document.getElementById("chatContainer");
+        const emptyState = document.getElementById("emptyState");
+        if (emptyState) emptyState.remove();
+
+        const div = document.createElement("div");
+        div.className = "chat-msg";
+
+        const userColor = getUserColor(username);
+        const avatarSrc =
+          channel && channelAvatars[channel] ? channelAvatars[channel] : "";
+
+        let html = "";
+        if (avatarSrc) {
+          html += `<img class="chat-avatar" src="${avatarSrc}" alt="${channel}" title="${channel}" onerror="this.style.display='none'">`;
+        } else if (channel) {
+          const channelColor = getChannelColor(channel);
+          html += `<span class="chat-avatar" style="background:${channelColor};display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0e0e10" title="${channel}">${channel.charAt(0).toUpperCase()}</span>`;
+        }
+        html += `<span class="chat-msg-body">`;
+        html += `<span class="chat-username" style="color:${userColor}">${username}</span>`;
+        html += `<span class="chat-content">${renderEmotes(content)}</span>`;
+        html += `</span>`;
+
+        div.innerHTML = html;
+        container.appendChild(div);
+
+        messageCount++;
+
+        while (container.children.length > 500) {
+          container.removeChild(container.firstChild);
+        }
+
+        if (autoScroll) {
+          container.scrollTop = container.scrollHeight;
+        }
       }
-      document.getElementById('statusDot').classList.remove('connected');
-      document.getElementById('statusText').textContent = 'Disconnected';
-      document.getElementById('connectBtn').disabled = false;
-      document.getElementById('disconnectBtn').disabled = true;
-      document.getElementById('channelTags').innerHTML = '';
-      addSystemMessage('Disconnected by user.');
-    }
 
-    function clearChat() {
-      const container = document.getElementById('chatContainer');
-      container.innerHTML = '';
-      messageCount = 0;
-      document.getElementById('msgCount').textContent = '';
-    }
+      function addSystemMessage(text) {
+        const container = document.getElementById("chatContainer");
+        const div = document.createElement("div");
+        div.className = "system-msg";
+        div.textContent = text;
+        container.appendChild(div);
+        if (autoScroll) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }
 
-    // Allow pressing Enter in the input to connect
-    document.getElementById('channelInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') connect();
-    });
-  </script>
-</body>
+      function updateScrollButtonVisibility() {
+        const btn = document.getElementById("resumeScrollBtn");
+        if (autoScroll) {
+          btn.classList.remove("visible");
+        } else {
+          btn.classList.add("visible");
+        }
+      }
+
+      document
+        .getElementById("chatContainer")
+        .addEventListener("scroll", function () {
+          const el = this;
+          autoScroll = el.scrollTop + el.clientHeight >= el.scrollHeight - 60;
+          updateScrollButtonVisibility();
+        });
+
+      function resumeAutoScroll() {
+        const container = document.getElementById("chatContainer");
+        container.scrollTop = container.scrollHeight;
+        autoScroll = true;
+        updateScrollButtonVisibility();
+      }
+
+      function toggleControls() {
+        const wrapper = document.getElementById("controlsWrapper");
+        const toggle = document.getElementById("headerToggle");
+        wrapper.classList.toggle("open");
+        toggle.classList.toggle("open");
+      }
+
+      async function connect() {
+        const input = document.getElementById("channelInput").value.trim();
+        if (!input) return;
+
+        const channels = input
+          .split(",")
+          .map((c) => c.trim().toLowerCase())
+          .filter(Boolean);
+
+        if (channels.length === 0) return;
+
+        document.getElementById("connectBtn").disabled = true;
+        document.getElementById("disconnectBtn").disabled = false;
+
+        try {
+          chat = await KickChat.listen(channels, (event, data, channel) => {
+            if (event === "App\\Events\\ChatMessageEvent") {
+              const username = data?.sender?.username || "unknown";
+              const content = data?.content || "";
+              addChatMessage(channel, username, content);
+            }
+          });
+
+          chat.onClose = () => {
+            document.getElementById("connectBtn").disabled = false;
+            document.getElementById("disconnectBtn").disabled = true;
+            addSystemMessage("Connection closed.");
+          };
+
+          addSystemMessage(`Connected to: ${channels.join(", ")}`);
+
+          const wrapper = document.getElementById("controlsWrapper");
+          const toggle = document.getElementById("headerToggle");
+          wrapper.classList.remove("open");
+          toggle.classList.remove("open");
+        } catch (err) {
+          document.getElementById("connectBtn").disabled = false;
+          document.getElementById("disconnectBtn").disabled = true;
+          addSystemMessage(`Error: ${err.message}`);
+        }
+      }
+
+      function disconnect() {
+        if (chat) {
+          chat.disconnect();
+          chat = null;
+        }
+        document.getElementById("connectBtn").disabled = false;
+        document.getElementById("disconnectBtn").disabled = true;
+        addSystemMessage("Disconnected by user.");
+      }
+
+      function clearChat() {
+        const container = document.getElementById("chatContainer");
+        container.innerHTML = "";
+        messageCount = 0;
+      }
+
+      document
+        .getElementById("channelInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") connect();
+        });
+    </script>
+  </body>
 </html>
